@@ -1,0 +1,4 @@
+# config/packages/easy_admin.yaml
+easy_admin:
+  design:
+    number_format: '%d'
