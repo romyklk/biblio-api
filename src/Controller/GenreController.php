@@ -3,23 +3,22 @@
 namespace App\Controller;
 
 use App\Entity\Genre;
-use Doctrine\ORM\EntityManager;
 use App\Repository\GenreRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class GenreController extends AbstractController
 {
 
     // Récupérer les genres sans détail
-    #[Route('/api-genre/simple', name: 'app_api_genre_simple', methods: ['GET'])]
+    #[Route('/api/genre/simple', name: 'app_api_genre_simple', methods: ['GET'])]
     public function list(GenreRepository $genreRepository, SerializerInterface $serializer)
     {
         $genres = $genreRepository->findAll();
@@ -35,7 +34,7 @@ class GenreController extends AbstractController
     }
 
 
-    #[Route('/api-genre/full', name: 'app_api_genre', methods: ['GET'])]
+    #[Route('/api/genre/full', name: 'app_api_genre', methods: ['GET'])]
     public function index(GenreRepository $genreRepository, SerializerInterface $serializer)
     {
         $genres = $genreRepository->findAll();
@@ -54,7 +53,7 @@ class GenreController extends AbstractController
     }
 
     // Afficher un genre par son id
-    #[Route('/api-genre/{id}', name: 'app_api_genre_show', methods: ['GET'])]
+    #[Route('/api/genre/{id}', name: 'app_api_genre_show', methods: ['GET'])]
     public function show(GenreRepository $genreRepository, SerializerInterface $serializer, $id)
     {
         $genre = $genreRepository->find($id);
@@ -73,22 +72,33 @@ class GenreController extends AbstractController
     }
 
     //Créer un genre
-    #[Route('/api-genre/add', name: 'add', methods: ['POST'])]
-    public function create(SerializerInterface $serializer,Request $request,EntityManagerInterface $entityManagerInterface)
+    #[Route('/api/genre/add', name: 'add', methods: ['POST'])]
+    public function create(SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator)
     {
         // Récupérer le contenu de la requête
         $data = $request->getContent();
-        
+
 
         //Créer un genre  à partir des données JSON reçues dans la requête POST que l'on va désérialiser en objet Genre grâce à la méthode deserialize() du composant SerializerInterface
         $genre = $serializer->deserialize($data, Genre::class, 'json');
+
+        // Gestions des erreurs de validation
+        $errors = $validator->validate($genre);
+        if (count($errors) > 0) {
+            $errorsJson = $serializer->serialize($errors, 'json');
+            return new JsonResponse(
+                $errorsJson,
+                Response::HTTP_BAD_REQUEST,
+                []
+            );
+        }
 
         // Enregistrer le genre en base de données
         $entityManagerInterface->persist($genre);
         $entityManagerInterface->flush();
 
         // On retourne une réponse en JSON avec le content type application/json
- /*        return new JsonResponse(
+        /*        return new JsonResponse(
             'Le genre a bien été créé',
             Response::HTTP_CREATED,
             [
@@ -112,23 +122,33 @@ class GenreController extends AbstractController
             ],
             true
         );
-        
-
     }
 
 
 
     // Modifier un genre
-    #[Route('/api-genre/{id}', name: 'app_api_genre_update', methods: ['PUT'])]
-    public function update(Genre $genre,SerializerInterface $serializerInterface, Request $request,EntityManagerInterface $entirtyManagerInterface)
+    #[Route('/api/genre/{id}', name: 'app_api_genre_update', methods: ['PUT'])]
+    public function update(Genre $genre, SerializerInterface $serializerInterface, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator)
     {
         $data = $request->getContent();
 
-        //object_to_populate permet de dire au composant Serializer que l'on veut mettre à jour un objet existant et non en créer un nouveau (par défaut, si on ne précise pas cette option, le composant Serializer va créer un nouvel objet)
-        $req = $serializerInterface->deserialize($data, Genre::class, 'json', ['object_to_populate' => $genre]);
+        // Mise à jour de l'objet $genre avec les données JSON reçues
+        // object_to_populate permet de dire au composant Serializer que l'on veut mettre à jour un objet existant et non en créer un nouveau.Dans ce cas je vais plus persister l'objet en base de données car il existe déjà mais je vais flusher les données en base de données
+        $serializerInterface->deserialize($data, Genre::class, 'json', ['object_to_populate' => $genre]);
 
-        $entirtyManagerInterface->persist($req);
-        $entirtyManagerInterface->flush();
+        // Gestion des erreurs de validation
+        $errors = $validator->validate($genre);
+        if (count($errors) > 0) {
+            $errorsJson = $serializerInterface->serialize($errors, 'json');
+            return new JsonResponse(
+                $errorsJson,
+                Response::HTTP_BAD_REQUEST,
+                [],
+                true
+            );
+        }
+
+        $entityManager->flush();
 
         return new JsonResponse(
             'Le genre a bien été modifié',
@@ -136,16 +156,16 @@ class GenreController extends AbstractController
             [],
             true
         );
-
     }
 
+
     // Supprimer un genre
-    #[Route('/api-genre/{id}', name: 'app_api_genre_delete', methods: ['DELETE'])]
-    public function delete(GenreRepository $genreRepository,EntityManagerInterface $entityManagerInterface,$id)
+    #[Route('/api/genre/{id}', name: 'app_api_genre_delete', methods: ['DELETE'])]
+    public function delete(GenreRepository $genreRepository, EntityManagerInterface $entityManagerInterface, $id)
     {
         $genre = $genreRepository->find($id);
 
-        if(!$genre){
+        if (!$genre) {
             return new JsonResponse(
                 "Le genre n'existe pas",
                 Response::HTTP_NOT_FOUND,
@@ -159,5 +179,4 @@ class GenreController extends AbstractController
             []
         );
     }
-
 }

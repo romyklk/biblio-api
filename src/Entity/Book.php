@@ -13,24 +13,24 @@ class Book
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?string $title = null;
 
     #[ORM\Column]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?float $price = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?string $isbn = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?Author $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
@@ -39,10 +39,11 @@ class Book
 
     #[ORM\ManyToOne(inversedBy: 'books')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['editor:full'])]
     private ?Genre $genre = null;
 
     #[ORM\Column]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(length: 255)]
@@ -81,7 +82,7 @@ class Book
 
     public function getPrice(): ?float
     {
-        return $this->price*100;
+        return $this->price;
     }
 
     public function setPrice(float $price): static

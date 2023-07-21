@@ -17,7 +17,7 @@ class Nationality
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'editor:full'])]
     private ?string $libelle = null;
 
     #[ORM\OneToMany(mappedBy: 'nationality', targetEntity: Author::class)]

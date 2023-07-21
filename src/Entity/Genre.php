@@ -7,7 +7,10 @@ use App\Repository\GenreRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
+#[UniqueEntity(fields: ['libelle'], message: 'Un genre avec ce libellé existe déjà.Veuillez en choisir un autre.')]
 #[ORM\Entity(repositoryClass: GenreRepository::class)]
 class Genre
 {
@@ -18,7 +21,10 @@ class Genre
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:simple', 'genre:full', 'genre:show'])]
+    #[Groups(['genre:simple', 'genre:full', 'genre:show', 'editor:full'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 3, max: 50, minMessage: 'Le libellé doit contenir au moins {{ limit }} caractères', maxMessage: 'Le libellé doit contenir au plus {{ limit }} caractères')]
+    #[Assert\Regex(pattern: '/^[a-zA-Z0-9àâäéèêëïîôöùûüç\'\- ]+$/', message: 'Le libellé ne doit contenir que des lettres, des chiffres, des espaces, des apostrophes, des tirets')]
     private ?string $libelle = null;
 
     #[ORM\OneToMany(mappedBy: 'genre', targetEntity: Book::class)]
