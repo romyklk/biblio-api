@@ -13,19 +13,19 @@ class Book
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['genre:full', 'editor:full'])]
+    #[Groups(['genre:full', 'editor:full', 'author:full'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full', 'editor:full'])]
+    #[Groups(['genre:full', 'editor:full', 'author:full'])]
     private ?string $title = null;
 
     #[ORM\Column]
-    #[Groups(['genre:full', 'editor:full'])]
+    #[Groups(['genre:full', 'editor:full', 'author:full'])]
     private ?float $price = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full', 'editor:full'])]
+    #[Groups(['genre:full', 'editor:full', 'author:full'])]
     private ?string $isbn = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
@@ -35,27 +35,28 @@ class Book
 
     #[ORM\ManyToOne(inversedBy: 'books')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['author:full'])]
     private ?Editor $editor = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['editor:full'])]
+    #[Groups(['editor:full', 'author:full'])]
     private ?Genre $genre = null;
 
     #[ORM\Column]
-    #[Groups(['genre:full', 'editor:full'])]
+    #[Groups(['genre:full', 'editor:full', 'author:full'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'author:full'])]
     private ?string $resume = null;
 
     #[ORM\Column]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'author:full'])]
     private ?int $publicationDate = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full'])]
+    #[Groups(['genre:full', 'author:full'])]
     private ?string $language = null;
 
     public function __construct()

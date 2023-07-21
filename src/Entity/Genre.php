@@ -21,7 +21,7 @@ class Genre
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:simple', 'genre:full', 'genre:show', 'editor:full'])]
+    #[Groups(['genre:simple', 'genre:full', 'genre:show', 'editor:full', 'author:full'])]
     #[Assert\NotBlank]
     #[Assert\Length(min: 3, max: 50, minMessage: 'Le libellé doit contenir au moins {{ limit }} caractères', maxMessage: 'Le libellé doit contenir au plus {{ limit }} caractères')]
     #[Assert\Regex(pattern: '/^[a-zA-Z0-9àâäéèêëïîôöùûüç\'\- ]+$/', message: 'Le libellé ne doit contenir que des lettres, des chiffres, des espaces, des apostrophes, des tirets')]

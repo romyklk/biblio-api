@@ -33,7 +33,7 @@ class EditorController extends AbstractController
     }
 
     // Récupérer les éditeurs avec détail
-    #[Route('/api/editor/full', name: 'app_api_editor_simple', methods: ['GET'])]
+    #[Route('/api/editor/full', name: 'app_api_editor_full', methods: ['GET'])]
     public function fullList(EditorRepository $editorRepository, SerializerInterface $serializer)
     {
         $editors = $editorRepository->findAll();

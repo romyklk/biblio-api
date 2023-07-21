@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\Editor;
-use App\Repository\EditorRepository;
+use App\Entity\Author;
+use App\Repository\AuthorRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,18 +14,19 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class EditorController extends AbstractController
+class AuthorController extends AbstractController
 {
     // Récupérer les éditeurs sans détail
-    #[Route('/api/editor/simple', name: 'app_api_editor_simple', methods: ['GET'])]
-    public function list(EditorRepository $editorRepository, SerializerInterface $serializer)
+    #[Route('/api/author/simple', name: 'app_api_author_simple', methods: ['GET'])]
+    public function list(AuthorRepository $authorRepository, SerializerInterface $serializer)
     {
-        $editors = $editorRepository->findAll();
+        $authors = $authorRepository->findAll();
+        
         $req = $serializer->serialize(
-            $editors,
+            $authors,
             'json',
             [
-                'groups' => 'editor:simple'
+                'groups' => 'author:simple'
             ]
         );
 
@@ -33,72 +34,76 @@ class EditorController extends AbstractController
     }
 
     // Récupérer les éditeurs avec détail
-    #[Route('/api/editor/full', name: 'app_api_editor_simple', methods: ['GET'])]
-    public function fullList(EditorRepository $editorRepository, SerializerInterface $serializer)
+    #[Route('/api/author/full', name: 'app_api_author_full', methods: ['GET'])]
+    public function fullList(AuthorRepository $authorRepository, SerializerInterface $serializer)
     {
-        $editors = $editorRepository->findAll();
+        $authors = $authorRepository->findAll();
         $req = $serializer->serialize(
-            $editors,
+            $authors,
             'json',
             [
-                'groups' => 'editor:full'
+                'groups' => 'author:full'
             ]
         );
 
-        return new JsonResponse($req, 200, [], true);
+        return new JsonResponse($req, 200, [],
+            true
+        );
     }
 
     // Afficher un éditeur par son id
-    #[Route('/api/editor/{id}', name: 'app_api_editor_show', methods: ['GET'])]
-    public function showById(EditorRepository $editorRepository, SerializerInterface $serializer, $id)
+    #[Route('/api/author/{id}', name: 'app_api_author_show', methods: ['GET'])]
+    public function showById(AuthorRepository $authorRepository, SerializerInterface $serializer, $id)
     {
-        $editor = $editorRepository->find($id);
-        if (!$editor) {
+        $author = $authorRepository->find($id);
+        if (!$author) {
             return new JsonResponse(
-                "L'éditeur demandé n'existe pas",
-                Response::HTTP_NOT_FOUND,
-                [],
-                true
-            );
+                    "L'auteur demandé n'existe pas",
+                    Response::HTTP_NOT_FOUND,
+                    [],
+                    true
+                );
         }
 
         $req = $serializer->serialize(
-            $editor,
+            $author,
             'json',
             [
-                'groups' => 'editor:simple'
+                'groups' => 'author:simple'
             ]
         );
 
-        return new JsonResponse($req, 200, [], true);
+        return new JsonResponse($req, 200, [],
+            true
+        );
     }
 
     // Ajouter un éditeur
-    #[Route('/api/editor/add', name: 'app_api_editor_add', methods: ['POST'])]
+    #[Route('/api/author/add', name: 'app_api_author_add', methods: ['POST'])]
     public function create(SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator)
     {
         $data = $request->getContent();
-        // On désérialise les données c'est à dire qu'on les transforme en objet Editor
-        $editor = $serializer->deserialize($data, Editor::class, 'json');
+        // On désérialise les données c'est à dire qu'on les transforme en objet Author
+        $author = $serializer->deserialize($data, Author::class, 'json');
 
-        $errors = $validator->validate($editor);
+        $errors = $validator->validate($author);
 
         if (count($errors) > 0) {
 
             return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
 
-        $entityManagerInterface->persist($editor);
+        $entityManagerInterface->persist($author);
         $entityManagerInterface->flush();
 
         return $this->json(
-            $editor,
+            $author,
             Response::HTTP_CREATED,
             [
                 'location' => $this->generateUrl(
-                    'app_api_editor_show',
+                    'app_api_author_show',
                     [
-                        'id' => $editor->getId()
+                        'id' => $author->getId()
                     ],
                     UrlGeneratorInterface::ABSOLUTE_URL
                 )
@@ -107,40 +112,40 @@ class EditorController extends AbstractController
     }
 
     // Modifier un éditeur
-    #[Route('/api/editor/{id}', name: 'app_api_editor_update', methods: ['PUT'])]
-    public function update(EditorRepository $editorRepository, SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator, $id)
+    #[Route('/api/author/{id}', name: 'app_api_author_update', methods: ['PUT'])]
+    public function update(AuthorRepository $authorRepository, SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator, $id)
     {
-        $editor = $editorRepository->find($id);
-        if (!$editor) {
+        $author = $authorRepository->find($id);
+        if (!$author) {
             return new JsonResponse(
-                "L'éditeur demandé n'existe pas",
-                Response::HTTP_NOT_FOUND,
-                [],
-                true
-            );
+                    "L'auteur demandé n'existe pas",
+                    Response::HTTP_NOT_FOUND,
+                    [],
+                    true
+                );
         }
 
         $data = $request->getContent();
-        $serializer->deserialize($data, Editor::class, 'json', ['object_to_populate' => $editor]);
+        $serializer->deserialize($data, Author::class, 'json', ['object_to_populate' => $author]);
 
-        $errors = $validator->validate($editor);
+        $errors = $validator->validate($author);
 
         if (count($errors) > 0) {
             $errorsJson = $serializer->serialize($errors, 'json');
             return $this->json($errorsJson, Response::HTTP_BAD_REQUEST);
         }
 
-        $entityManagerInterface->persist($editor);
+        $entityManagerInterface->persist($author);
         $entityManagerInterface->flush();
 
         return $this->json(
-            "L'éditeur a bien été modifié",
+            "L'auteur a bien été modifié",
             Response::HTTP_OK,
             [
                 'location' => $this->generateUrl(
-                    'app_api_editor_show',
+                    'app_api_author_show',
                     [
-                        'id' => $editor->getId()
+                        'id' => $author->getId()
                     ],
                     UrlGeneratorInterface::ABSOLUTE_URL
                 )
@@ -149,26 +154,27 @@ class EditorController extends AbstractController
     }
 
     // Supprimer un éditeur
-    #[Route('/api/editor/{id}', name: 'app_api_editor_delete', methods: ['DELETE'])]
-    public function delete(EditorRepository $editorRepository, EntityManagerInterface $entityManagerInterface, $id)
+    #[Route('/api/author/{id}', name: 'app_api_author_delete', methods: ['DELETE'])]
+    public function delete(AuthorRepository $authorRepository, EntityManagerInterface $entityManagerInterface, $id)
     {
-        $editor = $editorRepository->find($id);
-        if (!$editor) {
+        $author = $authorRepository->find($id);
+        if (!$author) {
             return new JsonResponse(
-                "L'éditeur demandé n'existe pas",
-                Response::HTTP_NOT_FOUND,
-                [],
-                true
-            );
+                    "L'auteur demandé n'existe pas",
+                    Response::HTTP_NOT_FOUND,
+                    [],
+                    true
+                );
         }
 
-        $entityManagerInterface->remove($editor);
+        $entityManagerInterface->remove($author);
         $entityManagerInterface->flush();
 
         return new JsonResponse(
-            "L'éditeur a bien été supprimé",
+            "L'auteur a bien été supprimé",
             Response::HTTP_OK,
             []
         );
     }
+
 }

@@ -17,10 +17,11 @@ class Nationality
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['genre:full', 'editor:full'])]
+    #[Groups(['genre:full', 'editor:full', 'author:full'])]
     private ?string $libelle = null;
 
     #[ORM\OneToMany(mappedBy: 'nationality', targetEntity: Author::class)]
+
     private Collection $authors;
 
     public function __construct()

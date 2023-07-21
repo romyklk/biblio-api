@@ -24,7 +24,7 @@ class Editor
     #[Assert\Length(min: 3, max: 80, minMessage: 'Le nom doit contenir au moins {{ limit }} caractères', maxMessage: 'Le nom doit contenir au plus {{ limit }} caractères')]
     #[Assert\Regex(pattern: '/^[a-zA-Z0-9àâäéèêëïîôöùûüç\'\- ]+$/', message: 'Le nom ne doit contenir que des lettres, des chiffres, des espaces, des apostrophes, des tirets')]
     #[ORM\Column(length: 255)]
-    #[Groups(['editor:simple', 'editor:full'])]
+    #[Groups(['editor:simple', 'editor:full', 'author:full'])]
     private ?string $name = null;
     
     #[Groups(['editor:full'])]
