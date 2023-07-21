@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Author;
+use App\Entity\Nationality;
 use App\Repository\AuthorRepository;
+use App\Repository\NationalityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class AuthorController extends AbstractController
 {
-    // Récupérer les éditeurs sans détail
+    // Récupérer les auteurs sans détail
     #[Route('/api/author/simple', name: 'app_api_author_simple', methods: ['GET'])]
     public function list(AuthorRepository $authorRepository, SerializerInterface $serializer)
     {
@@ -33,7 +35,7 @@ class AuthorController extends AbstractController
         return new JsonResponse($req, 200, [], true);
     }
 
-    // Récupérer les éditeurs avec détail
+    // Récupérer les auteurs avec détail
     #[Route('/api/author/full', name: 'app_api_author_full', methods: ['GET'])]
     public function fullList(AuthorRepository $authorRepository, SerializerInterface $serializer)
     {
@@ -51,7 +53,7 @@ class AuthorController extends AbstractController
         );
     }
 
-    // Afficher un éditeur par son id
+    // Afficher un auteur par son id
     #[Route('/api/author/{id}', name: 'app_api_author_show', methods: ['GET'])]
     public function showById(AuthorRepository $authorRepository, SerializerInterface $serializer, $id)
     {
@@ -78,26 +80,34 @@ class AuthorController extends AbstractController
         );
     }
 
-    // Ajouter un éditeur
+    // Ajouter un author
     #[Route('/api/author/add', name: 'app_api_author_add', methods: ['POST'])]
-    public function create(SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator)
+    public function create(SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator, NationalityRepository $nationalityRepository)
     {
-        $data = $request->getContent();
-        // On désérialise les données c'est à dire qu'on les transforme en objet Author
-        $author = $serializer->deserialize($data, Author::class, 'json');
+        $data = $request->getContent(); // On récupère les données de la requête sous forme de JSON brut
 
-        $errors = $validator->validate($author);
+        $dataTab = $serializer->decode($data, 'json'); // On récupère les données de la requête sous forme de tableau associatif pour pouvoir accéder à la nationalité qui est un objet inclus dans l'objet author
+
+        $author = new Author();
+
+        $authorNationality = $nationalityRepository->find($dataTab['nationality']['id']); // On récupère la nationalité de l'auteur
+
+        $serializer->deserialize($data, Author::class, 'json', ['object_to_populate' => $author]); // On décode le JSON pour le transformer en objet Author
+
+        $author->setNationality($authorNationality); // On ajoute la nationalité à l'auteur
+
+        $errors = $validator->validate($author); // On valide les données
 
         if (count($errors) > 0) {
-
-            return $this->json($errors, Response::HTTP_BAD_REQUEST);
+            $errorsJson = $serializer->serialize($errors, 'json'); // On transforme les erreurs en JSON
+            return $this->json($errorsJson, Response::HTTP_BAD_REQUEST); // On retourne les erreurs en JSON
         }
 
-        $entityManagerInterface->persist($author);
-        $entityManagerInterface->flush();
+        $entityManagerInterface->persist($author); // On persiste les données
+        $entityManagerInterface->flush(); // On envoie les données en BDD
 
         return $this->json(
-            $author,
+            "L'auteur a bien été ajouté",
             Response::HTTP_CREATED,
             [
                 'location' => $this->generateUrl(
@@ -109,11 +119,12 @@ class AuthorController extends AbstractController
                 )
             ]
         );
+
     }
 
     // Modifier un éditeur
     #[Route('/api/author/{id}', name: 'app_api_author_update', methods: ['PUT'])]
-    public function update(AuthorRepository $authorRepository, SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator, $id)
+    public function update(AuthorRepository $authorRepository, SerializerInterface $serializer, Request $request, EntityManagerInterface $entityManagerInterface, ValidatorInterface $validator, NationalityRepository $nationalityRepository, $id)
     {
         $author = $authorRepository->find($id);
         if (!$author) {
@@ -126,7 +137,11 @@ class AuthorController extends AbstractController
         }
 
         $data = $request->getContent();
+
+        $dataTab = $serializer->decode($data, 'json'); // On récupère les données de la requête sous forme de tableau associatif pour pouvoir accéder à la nationalité qui est un objet inclus dans l'objet author
+        $authorNationality = $nationalityRepository->find($dataTab['nationality']['id']); // On récupère la nationalité de l'auteur
         $serializer->deserialize($data, Author::class, 'json', ['object_to_populate' => $author]);
+        $author->setNationality($authorNationality); // On ajoute la nationalité à l'auteur
 
         $errors = $validator->validate($author);
 
